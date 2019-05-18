@@ -1,0 +1,4 @@
+---
+name: SRE30
+template:
+  path: './test/artifacts/demo_template.json'
