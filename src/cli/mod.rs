@@ -1,6 +1,5 @@
 use clap::{App, Arg};
 
-
 arg_enum! {
     #[derive(Debug)]
     enum TalkTrack {
@@ -61,7 +60,6 @@ fn get_down_subcommand<'a, 'b>() -> App<'a, 'b> {
 fn get_pkg_subcommand<'a, 'b>() -> App<'a, 'b> {
     return App::new("pkg");
 }
-
 
 fn get_user_environment_variable() -> &'static str {
     if cfg!(windows) {
