@@ -51,7 +51,7 @@ stages:
               downloadPath: '$(System.ArtifactsDirectory)' 
           - task: GitHubRelease@0
             inputs:
-              gitHubConnection: smurawski
+              gitHubConnection: github_smurawski
               repositoryName: smurawski/demo-up
               action: create
               target: '$(Build.SourceVersion)'
