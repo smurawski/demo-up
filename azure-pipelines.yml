@@ -50,7 +50,8 @@ stages:
               artifactName: drop
               downloadPath: '$(System.ArtifactsDirectory)' 
           - powershell: |
-              $version = (($env:System_ArtifactsDirectory/drop/demo.exe --version) -replace 'demo (\d+\.\d+\.\d+)\.\d+', '$1').trim()
+              cd $(System.ArtifactsDirectory)
+              $version = (./drop/demo.exe --version) -replace 'demo (\d+\.\d+\.\d+)\.\d+', '$1').trim()
               Write-Host "##vso[build.updatebuildnumber]v$version.$env:BUILD_BUILDID"
           - task: GitHubRelease@0
             inputs:
