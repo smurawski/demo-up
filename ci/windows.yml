@@ -4,7 +4,7 @@ parameters:
 steps:
   - powershell: |
       $m = convertfrom-json(cargo metadata --format-version 1)
-      $version = ($m | where-object {$_.name -like 'demo'}).version
+      $version = ($m.packages | where-object {$_.name -like 'demo'}).version
       Write-Host "##vso[build.updatebuildnumber]v$version.$env:BUILD_BUILDID"
     displayName: Label Build
 
