@@ -43,7 +43,7 @@ stages:
         pool:
           vmImage: 'vs2017-win2016'
         steps:
-          - task: DownloadPipelineArtifact@1
+          - task: DownloadBuildArtifacts@0
             inputs:
               buildType: current
               buildVersionToDownload: latest
