@@ -1,0 +1,24 @@
+---
+subscription: ca-stmuraws-demo-test
+sessions: 
+  - name: SRE10
+    slides: 
+      url: https://8gportalvhdsf9v440s15hrt.blob.core.windows.net/mitt1819/pptx/1215/SRE10.pptx
+    videos:
+      - url: https://ignitethetour.blob.core.windows.net/assets/SRE10/SetupSRE10.mp4
+    git_repos:
+      - https://github.com/smurawski/build18-node
+    commands:
+      - order: 2
+        cli:
+          subcommand: webapp restart
+          parameters:
+            name: demoup-test2
+      - order: 1
+        resource_group: SRE10-testing
+        location: westus2
+        template:
+          path: './test/artifacts/demo_template.json'
+          parameters:
+            webAppName: demoup-test2
+      

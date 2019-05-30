@@ -13,22 +13,37 @@ arg_enum! {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct CliArgs {
+    pub config_path: String,
+    pub subscription: String,
+    pub event: String,
+    pub session_names: Vec<String>,
+    pub location: String,
+}
+
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
 
     return App::new("demo")
         .version(&*version)
         .author("Steven Murawski <steven.murawski@microsoft.com>")
         .about("Sets up or tears down demo environments for Microsoft Ignite | The Tour")
+        .subcommand(get_up_subcommand())
+        .subcommand(get_down_subcommand())
+        .subcommand(get_pkg_subcommand())
         .arg(
             Arg::with_name("config_file")
                 .long("config-file")
                 .short("c")
                 .takes_value(true)
-                .default_value("./test/artifacts/single_session_config.yml")
+                .default_value("./demo.yml")
         )
-        .subcommand(get_up_subcommand())
-        .subcommand(get_down_subcommand())
-        .subcommand(get_pkg_subcommand());
+        .arg(
+            Arg::with_name("subscription")
+                .long("subscription")
+                .short("S")
+                .takes_value(true)
+        );
 }
 
 fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
