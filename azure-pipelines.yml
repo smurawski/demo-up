@@ -8,7 +8,7 @@ jobs:
     pool: 'ubuntu-16.04'
     steps:
       - template: 'ci/linux.yml'
-  - job: linux
+  - job: mac
     pool: 'macos-10.13'
     steps:
       - template: 'ci/mac.yml'
