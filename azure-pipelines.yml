@@ -20,18 +20,41 @@ stages:
   - stage: build
     jobs:
       - job: windows
-        pool: 
+        pool:
           vmImage: 'vs2017-win2016'
         steps:
           - template: './ci/windows.yml'
       - job: linux
-        pool: 
+        pool:
           vmImage: 'ubuntu-16.04'
         steps:
           - template: './ci/linux.yml'
       - job: mac
-        pool: 
+        pool:
           vmImage: 'macos-10.13'
         steps:
           - template: './ci/mac.yml'
-         
+
+
+  - stage: deploy
+    condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+    jobs:
+      - job: 'GitHub'
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              buildType: current
+              buildVersionToDownload: latest
+              artifactName: drop
+              downloadPath: '$(System.ArtifactsDirectory)' 
+          - task: GitHubRelease@0
+            inputs:
+              gitHubConnection: smurawski
+              repositoryName: smurawski/demo-up
+              action: create
+              target: '$(Build.SourceVersion)'
+              tagSource: manual
+              tag: $(Build.BuildNumber)
+              assets: '$(System.ArtifactsDirectory)/drop/*' 
