@@ -1,0 +1,7 @@
+---
+subscription: Ignite the Tour
+sessions: 
+  - name: SRE30
+    commands:
+      - template:
+          path: './test/artifacts/demo_template.json'
