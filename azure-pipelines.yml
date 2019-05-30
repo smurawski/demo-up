@@ -13,4 +13,4 @@ strategy:
 
 pool: $(imageName)
 steps:
-  - template: $(template)
+  - template: "$(template)"
