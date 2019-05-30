@@ -1,20 +1,20 @@
+use config::Command;
 use custom_error::custom_error;
+use duct::cmd;
 use regex::Regex;
-use duct::{cmd}; 
 use serde_json::Value;
 use std::env;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::Output;
-use config::Command;
 use uuid::Uuid;
 
-custom_error!{
+custom_error! {
     pub AzCliError
     Unknown = "unknown error",
     CliMissing = "Unable to find the Azure CLI.",
-    InvalidJsonError{source: std::string::FromUtf8Error} = "Failed to convert the output.", 
-    RegexError{source: regex::Error} = "Regex problem.", 
+    InvalidJsonError{source: std::string::FromUtf8Error} = "Failed to convert the output.",
+    RegexError{source: regex::Error} = "Regex problem.",
     JsonDeserializationError{source: serde_json::Error} = "JSON error",
     CommandFailure{source: std::io::Error} = "Unable to log in via the Azure CLI",
     NotLoggedIn = "Az CLI is not authenticated.",
@@ -24,8 +24,7 @@ custom_error!{
 fn get_az_cli_path() -> Result<PathBuf, AzCliError> {
     if let Some(cli_path) = find_command("az") {
         Ok(cli_path)
-    }
-    else {
+    } else {
         Err(AzCliError::CliMissing)
     }
 }
@@ -42,16 +41,18 @@ impl Default for AzAccountInfo {
         AzAccountInfo {
             subscription_name: None,
             subscription_id: None,
-            tenant_id: None
+            tenant_id: None,
         }
     }
 }
 
-pub fn set_azure_environment(subscription: &str) -> Result<(),AzCliError> {
-    println!("Checking to see if the Azure CLI is authenticated and which subscription is default.");
+pub fn set_azure_environment(subscription: &str) -> Result<(), AzCliError> {
+    println!(
+        "Checking to see if the Azure CLI is authenticated and which subscription is default."
+    );
     let account = match get_account_info() {
         Ok(a) => a,
-        Err(_) =>  {
+        Err(_) => {
             login()?;
             println!("Checking for the default subscription.");
             get_account_info()?
@@ -64,8 +65,7 @@ pub fn set_azure_environment(subscription: &str) -> Result<(),AzCliError> {
         if !subscription.is_empty() {
             if account_subscription.trim_matches('"') == subscription {
                 println!("Subscription already configured correctly.\n");
-            }
-            else {
+            } else {
                 println!("Setting the target subscription to {}\n", &subscription);
                 set_target_subscription(subscription)?;
             }
@@ -75,24 +75,22 @@ pub fn set_azure_environment(subscription: &str) -> Result<(),AzCliError> {
     Ok(())
 }
 
-fn get_account_info() -> Result<AzAccountInfo, AzCliError>{
-
+fn get_account_info() -> Result<AzAccountInfo, AzCliError> {
     let args = vec!["account", "show", "--output", "json"];
 
     let output = run_az_command_with_output(args)?;
     let stdout = String::from_utf8(output.stdout)?;
-    
+
     let regex_string = "Please run 'az login' to setup account.";
     let re = Regex::new(regex_string)?;
 
-    let account = AzAccountInfo::default();     
+    let account = AzAccountInfo::default();
 
     let mut _return_value = Ok(account);
 
     if let Some(_captures) = re.captures(&stdout) {
         _return_value = Err(AzCliError::NotLoggedIn);
-    }
-    else {
+    } else {
         let v: Value = serde_json::from_str(&stdout)?;
 
         let current_account = AzAccountInfo {
@@ -108,7 +106,7 @@ fn get_account_info() -> Result<AzAccountInfo, AzCliError>{
 }
 
 fn login() -> Result<(), AzCliError> {
-    let az_cli_path = get_az_cli_path()?;    
+    let az_cli_path = get_az_cli_path()?;
     let (pipe_reader, _pipe_writer) = os_pipe::pipe()?;
     let (error_pipe_reader, error_pipe_writer) = os_pipe::pipe()?;
 
@@ -120,7 +118,6 @@ fn login() -> Result<(), AzCliError> {
         .start()?;
 
     for line in BufReader::new(error_pipe_reader).lines() {
-
         if let Ok(l) = line {
             let logged_in_regex = r"^WARNING: (You have logged in\.)";
             let warning_regex = r"^WARNING: (.*)$";
@@ -129,13 +126,11 @@ fn login() -> Result<(), AzCliError> {
 
             if let Some(m) = warn.captures(&l) {
                 if let Some(m2) = logged_in.captures(&l) {
-                    println!("{}", &m2[1] );
-                }
-                else {
+                    println!("{}", &m2[1]);
+                } else {
                     println!("{}", &m[1]);
                 }
             }
-
         }
     }
 
@@ -158,14 +153,7 @@ fn create_resource_group(command: &Command) -> Result<Output, AzCliError> {
     let local_command = command.clone();
     let rg = local_command.resource_group.unwrap();
     let location = local_command.location.unwrap();
-    let args = vec![
-        "group", 
-        "create", 
-        "--name", 
-        &rg, 
-        "--location",
-        &location
-    ];
+    let args = vec!["group", "create", "--name", &rg, "--location", &location];
     run_az_command_with_output(args)
 }
 
@@ -189,14 +177,11 @@ pub fn deploy_template(command: &Command) -> Result<Output, AzCliError> {
     let local_template = command.clone().template();
     if local_template.path.is_some() {
         deploy_template_from_file(command)
-    }
-    else if local_template.url.is_some() {
+    } else if local_template.url.is_some() {
         deploy_template_from_url(command)
-    }
-    else {
+    } else {
         Err(AzCliError::MissingTemplate)
     }
-
 }
 
 fn deploy_template_from_file(command: &Command) -> Result<Output, AzCliError> {
@@ -215,12 +200,12 @@ fn deploy_template_from_file(command: &Command) -> Result<Output, AzCliError> {
         "--resource-group",
         &rg,
         "--template-file",
-        &path,        
-    ]; 
+        &path,
+    ];
 
     if template.parameters.is_some() {
         args.push("--parameters");
-        
+
         let p: Vec<&str> = parameters.iter().map(|s| &**s).collect();
         args.extend(p);
     }
@@ -244,12 +229,12 @@ fn deploy_template_from_url(command: &Command) -> Result<Output, AzCliError> {
         "--resource-group",
         &rg,
         "--template-uri",
-        &url,        
-    ]; 
+        &url,
+    ];
 
     if template.parameters.is_some() {
         args.push("--parameters");
-        
+
         let p: Vec<&str> = parameters.iter().map(|s| &**s).collect();
         args.extend(p);
     }
@@ -265,12 +250,13 @@ fn run_az_command_with_output(args: Vec<&str>) -> Result<Output, AzCliError> {
         .stdout_capture()
         .unchecked()
         .run()?;
-    
+
     Ok(output)
 }
 
 fn find_command<T>(command: T) -> Option<PathBuf>
-    where T: AsRef<Path>
+where
+    T: AsRef<Path>,
 {
     // If the command path is absolute and a file exists, then use that.
     if command.as_ref().is_absolute() && command.as_ref().is_file() {

@@ -23,7 +23,6 @@ pub struct CliArgs {
 }
 
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
-
     return App::new("demo")
         .version(&*version)
         .author("Steven Murawski <steven.murawski@microsoft.com>")
@@ -48,46 +47,46 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
 
 fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
     return App::new("up")
-                .about("Sets up the demo environment for one or more learning paths or sessions.")
-                .arg(get_event_arg())
-                .arg(get_learning_path_arg())
-                .arg(get_session_name_arg());
+        .about("Sets up the demo environment for one or more learning paths or sessions.")
+        .arg(get_event_arg())
+        .arg(get_learning_path_arg())
+        .arg(get_session_name_arg());
 }
 
 fn get_down_subcommand<'a, 'b>() -> App<'a, 'b> {
-    return App::new("down")
+    return App::new("down");
 }
 
 fn get_pkg_subcommand<'a, 'b>() -> App<'a, 'b> {
-    return App::new("pkg")
+    return App::new("pkg");
 }
 
 fn get_event_arg<'a, 'b>() -> Arg<'a, 'b> {
     return Arg::with_name("event")
-                        .long("event")
-                        .short("e")
-                        .help("Event name (to keep environments unique).  Defaults to your local user name.")
-                        .env("USERNAME");
+        .long("event")
+        .short("e")
+        .help("Event name (to keep environments unique).  Defaults to your local user name.")
+        .env("USERNAME");
 }
 
 fn get_learning_path_arg<'a, 'b>() -> Arg<'a, 'b> {
     return Arg::with_name("learning_path")
-                        .multiple(true)
-                        .long("learning-path")
-                        .short("l")
-                        .help("Learning path.")
-                        .possible_values(&TalkTrack::variants())
-                        .takes_value(true);
+        .multiple(true)
+        .long("learning-path")
+        .short("l")
+        .help("Learning path.")
+        .possible_values(&TalkTrack::variants())
+        .takes_value(true);
 }
 
 fn get_session_name_arg<'a, 'b>() -> Arg<'a, 'b> {
     return Arg::with_name("session_name")
-                        .multiple(true)
-                        .long("session-name")
-                        .short("s")
-                        .help("Session name.")
-                        .conflicts_with("learning_path")
-                        .takes_value(true);
+        .multiple(true)
+        .long("session-name")
+        .short("s")
+        .help("Session name.")
+        .conflicts_with("learning_path")
+        .takes_value(true);
 }
 
 #[cfg(test)]
@@ -152,8 +151,6 @@ mod tests {
         assert!(session_name.is_some());
     }
 
-    
-
     // #[test]
     // fn demo_up_learning_path_and_session_error() {
     //     let cli = get_up_subcommand();
@@ -172,7 +169,7 @@ mod tests {
 
         assert!(matches.is_ok());
     }
-    
+
     #[test]
     fn demo_pkg_no_parameters() {
         let args = vec!["pkg"];

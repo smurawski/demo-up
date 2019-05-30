@@ -1,17 +1,17 @@
-use serde::{Serialize, Deserialize};
+use cli::CliArgs;
+use reqwest::{Client, Url};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
-use std::path::Path;
-use std::io::prelude::*;
 use std::io;
-use cli::CliArgs;
-use reqwest::{Url, Client};
+use std::io::prelude::*;
+use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ArmTemplate {
     pub path: Option<String>,
     pub url: Option<String>,
-    pub parameters: Option<HashMap<String, String>>
+    pub parameters: Option<HashMap<String, String>>,
 }
 
 impl ArmTemplate {
@@ -19,8 +19,7 @@ impl ArmTemplate {
         let template = self.clone();
         if let Some(p) = template.path {
             p
-        }
-        else {
+        } else {
             panic!("Failed to retrieve a local path.")
         }
     }
@@ -29,8 +28,7 @@ impl ArmTemplate {
         let template = self.clone();
         if let Some(u) = template.url {
             u
-        }
-        else {
+        } else {
             panic!("Failed to retrieve a template url.")
         }
     }
@@ -40,7 +38,7 @@ impl ArmTemplate {
         let mut parameters = Vec::new();
         if let Some(p) = local_template.parameters {
             for (k, v) in &p {
-                let parameter_string = format!("{}={}", k, v );
+                let parameter_string = format!("{}={}", k, v);
                 parameters.push(parameter_string);
             }
         }
@@ -61,7 +59,7 @@ impl Default for ArmTemplate {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct CliCommand {
     pub subcommand: Option<String>,
-    pub parameters: Option<HashMap<String, String>>
+    pub parameters: Option<HashMap<String, String>>,
 }
 
 impl CliCommand {
@@ -69,8 +67,7 @@ impl CliCommand {
         let cli_command = self.clone();
         if let Some(s) = cli_command.subcommand {
             s
-        }
-        else {
+        } else {
             panic!("Azure CLI commands must contain a subcommand.")
         }
     }
@@ -80,7 +77,7 @@ impl CliCommand {
         if let Some(p) = cli_command.parameters {
             for (k, v) in &p {
                 let parameter = format!("--{}", k);
-                let argument = format!("{}", v );
+                let argument = format!("{}", v);
                 parameters.push(parameter);
                 parameters.push(argument);
             }
@@ -112,8 +109,7 @@ impl Command {
         let command = self.clone();
         if let Some(c) = command.cli {
             c
-        }
-        else {
+        } else {
             CliCommand::default()
         }
     }
@@ -122,17 +118,15 @@ impl Command {
         let command = self.clone();
         if let Some(t) = command.template {
             t
-        }
-        else {
+        } else {
             ArmTemplate::default()
         }
     }
-    
+
     pub fn order(&self) -> u32 {
         if let Some(o) = self.order {
             o
-        }
-        else {
+        } else {
             u32::max_value()
         }
     }
@@ -145,7 +139,7 @@ impl Default for Command {
             resource_group: None,
             location: None,
             cli: None,
-            template: None
+            template: None,
         }
     }
 }
@@ -153,18 +147,17 @@ impl Default for Command {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct FileDownload {
     pub file_name: Option<String>,
-    pub url: Option<String>
+    pub url: Option<String>,
 }
 
 impl Default for FileDownload {
     fn default() -> Self {
         FileDownload {
             file_name: None,
-            url: None
+            url: None,
         }
     }
 }
-
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Session {
@@ -180,8 +173,7 @@ impl Session {
         let s = self.clone();
         if let Some(c) = s.commands {
             c
-        }
-        else {
+        } else {
             Vec::new()
         }
     }
@@ -190,8 +182,7 @@ impl Session {
         let s = self.clone();
         if let Some(n) = s.name {
             n
-        }
-        else {
+        } else {
             panic!("Sessions must have a name.")
         }
     }
@@ -204,7 +195,7 @@ impl Default for Session {
             slides: None,
             git_repos: None,
             videos: None,
-            commands: None
+            commands: None,
         }
     }
 }
@@ -246,8 +237,7 @@ impl Config {
         let config = self.clone();
         if let Some(s) = config.subscription {
             s
-        }
-        else {
+        } else {
             panic!("A subscription needs to be defined, either in the configuration file or on the command line.")
         }
     }
@@ -256,8 +246,7 @@ impl Config {
         let config = self.clone();
         if let Some(s) = config.sessions {
             s
-        }
-        else {
+        } else {
             Vec::new()
         }
     }
@@ -267,11 +256,10 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             subscription: None,
-            sessions: None
+            sessions: None,
         }
     }
 }
-
 
 fn read(path: &str) -> Result<String, io::Error> {
     let mut file = File::open(path)?;
@@ -284,13 +272,16 @@ fn read(path: &str) -> Result<String, io::Error> {
 fn load(yaml_str: &str) -> Config {
     match serde_yaml::from_str(&yaml_str) {
         Ok(s) => s,
-        Err(_e) => Config::default()
+        Err(_e) => Config::default(),
     }
 }
 
 fn read_from_url(url: Url) -> Result<String, io::Error> {
     let client = Client::new();
-    let mut resp = client.get(url).send().expect("Failed to retrieve the configuration file.");
+    let mut resp = client
+        .get(url)
+        .send()
+        .expect("Failed to retrieve the configuration file.");
     let mut contents = String::new();
     resp.read_to_string(&mut contents)?;
 
@@ -303,18 +294,15 @@ pub fn get_config(path: &str) -> Config {
         Err(_) => {
             if Path::new(path).exists() {
                 read(path).unwrap()
-            }
-            else {
+            } else {
                 let default_path = "./demo.yml";
                 if Path::new(default_path).exists() {
                     read(default_path).unwrap()
-                }
-                else {
+                } else {
                     panic!("Failed to locate any valid configuration file.")
                 }
-
             }
-        },
+        }
     };
     load(&content)
 }
@@ -325,7 +313,6 @@ mod tests {
 
     fn load_empty_config() -> Config {
         get_config(&"./test/artifacts/empty_config.yml")
-
     }
 
     fn load_single_session_config() -> Config {
@@ -342,7 +329,6 @@ mod tests {
         }
         session_result
     }
-
 
     #[test]
     fn empty_config_is_valid() {
@@ -395,7 +381,7 @@ mod tests {
     fn single_session_command_has_template_no_parameters() {
         let session_result = get_single_session();
         let commands = session_result.commands.unwrap().to_vec();
-        
+
         if let Some(template) = &commands[0].template {
             assert!(template.path.is_some());
             let template_path = template.clone().path.unwrap();

@@ -16,19 +16,22 @@ pr:
       - README.md
       - ci/*
 
-jobs:
-  - job: windows
-    pool: 
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: './ci/windows.yml'
-  - job: linux
-    pool: 
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: './ci/linux.yml'
-  - job: mac
-    pool: 
-      vmImage: 'macos-10.13'
-    steps:
-      - template: './ci/mac.yml'
+stages:
+  - stage: build
+    jobs:
+      - job: windows
+        pool: 
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: './ci/windows.yml'
+      - job: linux
+        pool: 
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: './ci/linux.yml'
+      - job: mac
+        pool: 
+          vmImage: 'macos-10.13'
+        steps:
+          - template: './ci/mac.yml'
+         
