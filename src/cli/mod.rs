@@ -1,5 +1,6 @@
 use clap::{App, Arg};
 
+
 arg_enum! {
     #[derive(Debug)]
     enum TalkTrack {
@@ -61,12 +62,21 @@ fn get_pkg_subcommand<'a, 'b>() -> App<'a, 'b> {
     return App::new("pkg");
 }
 
+
+fn get_user_environment_variable() -> &'static str {
+    if cfg!(windows) {
+        "USERNAME"
+    } else {
+        "USER"
+    }
+}
+
 fn get_event_arg<'a, 'b>() -> Arg<'a, 'b> {
     return Arg::with_name("event")
         .long("event")
         .short("e")
         .help("Event name (to keep environments unique).  Defaults to your local user name.")
-        .env("USERNAME");
+        .env(get_user_environment_variable());
 }
 
 fn get_learning_path_arg<'a, 'b>() -> Arg<'a, 'b> {
