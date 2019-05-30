@@ -63,10 +63,10 @@ pub fn set_azure_environment(subscription: &str) -> Result<(),AzCliError> {
 
         if !subscription.is_empty() {
             if account_subscription.trim_matches('"') == subscription {
-                println!("Subscription already configured correctly.");
+                println!("Subscription already configured correctly.\n");
             }
             else {
-                println!("Setting the target subscription to {}", &subscription);
+                println!("Setting the target subscription to {}\n", &subscription);
                 set_target_subscription(subscription)?;
             }
         }

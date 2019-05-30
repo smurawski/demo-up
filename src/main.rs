@@ -37,7 +37,6 @@ fn main() {
         session_names: Vec::new(),
         location: "westus2".to_string(),
     };
-    let mut config = get_config(&cli_args.config_path);
     cli_args.subscription =  match matches.value_of("subscription"){
         Some(s) => s.to_string(),
         _ => "".to_string()
@@ -61,6 +60,8 @@ fn main() {
             cli_args.session_names = sub_matches.values_of("session_name").unwrap().map(|x| x.to_string()).collect();
         }
 
+        println!("Loading the configuration from {}\n", &cli_args.config_path);
+        let mut config = get_config(&cli_args.config_path);
         config.update(&cli_args);
         
         set_azure_environment(&config.subscription()).unwrap();
@@ -68,7 +69,7 @@ fn main() {
         let starting_directory = env::current_dir().unwrap();
         for session_name in cli_args.session_names {
             let mut current_sessions = config.sessions();
-            println!("Setting up environment for {}", &session_name);
+            println!("Setting up environment for {}\n", &session_name);
             current_sessions.retain(|s| s.name() == session_name);
             for s in current_sessions {
                 println!("\t{}: Starting setup", &session_name);
@@ -112,7 +113,7 @@ fn main() {
                     for repo_url in s.git_repos.unwrap() {
                         let repo_name = get_filename(&repo_url, "");
                         let repo_dir = &source_directory.join(&repo_name);
-                        println!("\t{} Cloning {} into {}", &session_name, &repo_name, &repo_dir.to_str().unwrap());
+                        println!("\t{}: Cloning {} into {}", &session_name, &repo_name, &repo_dir.to_str().unwrap());
                         git_clone(&repo_url, repo_dir.to_path_buf());
                     }
                 }
