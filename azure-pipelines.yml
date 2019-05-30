@@ -1,14 +1,17 @@
 
 jobs:
   - job: windows
-    pool: 'vs2017-win2016'
+    pool: 
+      vmImage: 'vs2017-win2016'
     steps:
       - template: './ci/windows.yml'
   - job: linux
-    pool: 'ubuntu-16.04'
+    pool: 
+      vmImage: 'ubuntu-16.04'
     steps:
       - template: './ci/linux.yml'
   - job: mac
-    pool: 'macos-10.13'
+    pool: 
+      vmImage: 'macos-10.13'
     steps:
       - template: './ci/mac.yml'
