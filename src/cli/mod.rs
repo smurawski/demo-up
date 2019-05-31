@@ -15,6 +15,7 @@ arg_enum! {
 
 #[derive(Clone, Debug)]
 pub struct CliArgs {
+    pub config_path_provided: bool,
     pub config_path: String,
     pub subscription: String,
     pub event: String,
