@@ -301,8 +301,12 @@ pub fn get_config(path: &str, config_path_provided: &bool) -> Config {
     let default_path = "./demo.yml";
 
     let content = if !config_path_provided && Path::new(default_path).exists() {
+        println!("Loading the configuration from {}\n", &default_path);
+
         read(default_path).unwrap()
     } else {
+        println!("Loading the configuration from {}\n", &path);
+
         match Url::parse(path) {
             Ok(url) => read_from_url(url).unwrap(),
             Err(_) => {

@@ -68,7 +68,6 @@ fn main() {
                 .collect();
         }
 
-        println!("Loading the configuration from {}\n", &cli_args.config_path);
         let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
         config.update(&cli_args);
 
@@ -166,7 +165,6 @@ fn main() {
             _ => panic!("No output path provided."),
         };
 
-        println!("Loading the configuration from {}\n", &cli_args.config_path);
         let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
         //config.update(&cli_args);
 

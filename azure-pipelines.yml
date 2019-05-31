@@ -51,9 +51,11 @@ stages:
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc build --release
             displayName: Build Release
-
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
+            
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: Release Build"
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
             inputs:
               PathtoPublish: ./target/release/demo.exe
               ArtifactName: drop
@@ -95,13 +97,16 @@ stages:
               export PATH="~/.cargo/bin:$PATH"
               cargo build --release
             displayName: Build Release
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
 
           - script: |
               mv ./target/release/demo ./target/release/demo-linux
             displayName: Rename Executable
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
 
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: Release Build"
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
             inputs:
               PathtoPublish: ./target/release/demo-linux
               ArtifactName: drop
@@ -143,13 +148,16 @@ stages:
               export PATH="~/.cargo/bin:$PATH"
               cargo build --release
             displayName: Build Release
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
 
           - script: |
               mv ./target/release/demo ./target/release/demo-darwin
             displayName: Rename Executable
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
 
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: Release Build"
+            condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
             inputs:
               PathtoPublish: ./target/release/demo-darwin
               ArtifactName: drop
@@ -157,7 +165,6 @@ stages:
               TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
               Parallel: false
               ParallelCount: 8
-
 
   - stage: deploy
     condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
