@@ -158,6 +158,8 @@ fn create_resource_group(command: &Command) -> Result<Output, AzCliError> {
 }
 
 pub fn run_cli_command(command: &Command) -> Result<Output, AzCliError> {
+    create_resource_group(command)?;
+
     let mut args: Vec<String> = Vec::new();
     let cli_command = command.cli();
     args.push(cli_command.subcommand());

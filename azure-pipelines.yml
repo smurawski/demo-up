@@ -1,5 +1,5 @@
 trigger:
-  batch: true
+  batch: "true"
   branches:
     include:
     - master
@@ -23,17 +23,140 @@ stages:
         pool:
           vmImage: 'vs2017-win2016'
         steps:
-          - template: './ci/windows.yml'
+          - powershell: |
+              invoke-restmethod -usebasicparsing 'https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe' -outfile 'rustup-init.exe'
+              ./rustup-init.exe -y --default-toolchain stable-x86_64-pc-windows-msvc --no-modify-path
+              remove-item rustup-init.exe
+            displayName: Install Rust
+
+          - powershell: |
+              $m = convertfrom-json(cargo metadata --format-version 1)
+              $version = ($m.packages | where-object {$_.name -like 'demo'}).version
+              Write-Host "##vso[build.updatebuildnumber]v$version.$env:BUILD_BUILDID"
+            displayName: Label Build
+
+          - powershell: |
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" component add rustfmt
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc fmt -- --check
+            displayName: Validate Formatting
+
+          - powershell: |
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc check
+            displayName: Cargo Check
+
+          - powershell: |
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc test
+            displayName: Run Tests
+
+          - powershell: |
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc build --release
+            displayName: Build Release
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifact: Release Build"
+            inputs:
+              PathtoPublish: ./target/release/demo.exe
+              ArtifactName: drop
+              ArtifactType: Container
+              TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
+              Parallel: false
+              ParallelCount: 8
+
       - job: linux
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - template: './ci/linux.yml'
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              if command -v rustup >/dev/null; then
+                rustup install stable-x86_64-unknown-linux-gnu
+              else
+                  curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable-x86_64-unknown-linux-gnu -y
+              fi
+            displayName: Install Rust
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              rustup component add rustfmt
+              cargo fmt -- --check
+            displayName: Validate Formatting
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo check
+            displayName: Cargo Check
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo test
+            displayName: Run Tests
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo build --release
+            displayName: Build Release
+
+          - script: |
+              mv ./target/release/demo ./target/release/demo-linux
+            displayName: Rename Executable
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifact: Release Build"
+            inputs:
+              PathtoPublish: ./target/release/demo-linux
+              ArtifactName: drop
+              ArtifactType: Container
+              TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
+              Parallel: false
+              ParallelCount: 8
+
       - job: mac
         pool:
           vmImage: 'macos-10.13'
         steps:
-          - template: './ci/mac.yml'
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              if command -v rustup >/dev/null; then
+                rustup install stable-x86_64-apple-darwin
+              else
+                  curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable-x86_64-apple-darwin -y
+              fi
+            displayName: Install Rust
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              rustup component add rustfmt
+              cargo fmt -- --check
+            displayName: Validate Formatting
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo check
+            displayName: Cargo Check
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo test
+            displayName: Run Tests
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
+              cargo build --release
+            displayName: Build Release
+
+          - script: |
+              mv ./target/release/demo ./target/release/demo-darwin
+            displayName: Rename Executable
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifact: Release Build"
+            inputs:
+              PathtoPublish: ./target/release/demo-darwin
+              ArtifactName: drop
+              ArtifactType: Container
+              TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
+              Parallel: false
+              ParallelCount: 8
 
 
   - stage: deploy
@@ -48,7 +171,7 @@ stages:
               buildType: current
               buildVersionToDownload: latest
               artifactName: drop
-              downloadPath: '$(System.ArtifactsDirectory)' 
+              downloadPath: '$(System.ArtifactsDirectory)'
           - powershell: |
               cd $(System.ArtifactsDirectory)
               $version = ((./drop/demo.exe --version) -replace 'demo').trim()
@@ -61,4 +184,4 @@ stages:
               target: '$(Build.SourceVersion)'
               tagSource: manual
               tag: $(Build.BuildNumber)
-              assets: '$(System.ArtifactsDirectory)/drop/*' 
+              assets: '$(System.ArtifactsDirectory)/drop/*'

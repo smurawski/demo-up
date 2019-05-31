@@ -160,6 +160,20 @@ fn main() {
         }
     }
 
+    if let Some(sub_matches) = matches.subcommand_matches("fetch") {
+        let output_file = match sub_matches.value_of("OUTPUT") {
+            Some(f) if !f.is_empty() => f.to_string(),
+            _ => panic!("No output path provided."),
+        };
+
+        println!("Loading the configuration from {}\n", &cli_args.config_path);
+        let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
+        //config.update(&cli_args);
+
+        println!("Writing the configuration to {}\n", &output_file);
+        config.write(&output_file);
+    }
+
     // if let Some(sub_matches) = matches.subcommand_matches("down") {
     // }
 

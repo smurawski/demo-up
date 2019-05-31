@@ -207,6 +207,15 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn write(&self, file_path: &str) {
+        if let Ok(content) = serde_yaml::to_string(self) {
+            let mut file = File::create(file_path).expect("Failed to create the output file.");
+            file.write_all(content.into_bytes().as_ref()).unwrap();
+        } else {
+            panic!("Failed to serialize the configuration.");
+        };
+    }
+
     pub fn update<'a>(&'a mut self, cli_args: &CliArgs) -> &'a mut Config {
         if !cli_args.subscription.is_empty() {
             self.subscription = Some(cli_args.subscription.clone());

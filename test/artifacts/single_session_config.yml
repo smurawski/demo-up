@@ -2,6 +2,9 @@
 subscription: Ignite the Tour
 sessions: 
   - name: SRE30
+    slides: ~
+    videos: ~
+    git_repos: ~
     commands:
       - template:
           path: './test/artifacts/demo_template.json'
