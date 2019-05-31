@@ -194,23 +194,23 @@ mod tests {
     //     assert!(good_response.is_err())
     // }
 
-    #[test]
-    fn demo_down_no_parameters() {
-        let args = vec!["down"];
+    // #[test]
+    // fn demo_down_no_parameters() {
+    //     let args = vec!["down"];
 
-        let cli = get_down_subcommand();
-        let matches = cli.get_matches_from_safe(args);
+    //     let cli = get_down_subcommand();
+    //     let matches = cli.get_matches_from_safe(args);
 
-        assert!(matches.is_ok());
-    }
+    //     assert!(matches.is_ok());
+    // }
 
-    #[test]
-    fn demo_pkg_no_parameters() {
-        let args = vec!["pkg"];
+    // #[test]
+    // fn demo_pkg_no_parameters() {
+    //     let args = vec!["pkg"];
 
-        let cli = get_pkg_subcommand();
-        let matches = cli.get_matches_from_safe(args);
+    //     let cli = get_pkg_subcommand();
+    //     let matches = cli.get_matches_from_safe(args);
 
-        assert!(matches.is_ok());
-    }
+    //     assert!(matches.is_ok());
+    // }
 }
