@@ -35,13 +35,13 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("config-file")
                 .short("c")
                 .takes_value(true)
-                .default_value("https://aka.ms/demo-up")
+                .default_value("https://aka.ms/demo-up"),
         )
         .arg(
             Arg::with_name("subscription")
                 .long("subscription")
                 .short("S")
-                .takes_value(true)
+                .takes_value(true),
         );
 }
 
