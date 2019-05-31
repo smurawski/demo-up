@@ -28,6 +28,7 @@ fn main() {
         env!("CARGO_PKG_VERSION"),
         option_env!("BUILD_BUILDID").unwrap_or("0")
     );
+
     let session_numbers = vec!["10", "20", "30", "40", "50"];
 
     let matches = get_app_cli(&version).get_matches();
@@ -68,7 +69,7 @@ fn main() {
                 .collect();
         }
 
-        let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
+        let mut config = get_config(&cli_args.config_path, cli_args.config_path_provided);
         config.update(&cli_args);
 
         set_azure_environment(&config.subscription()).unwrap();
@@ -165,7 +166,7 @@ fn main() {
             _ => panic!("No output path provided."),
         };
 
-        let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
+        let mut config = get_config(&cli_args.config_path, cli_args.config_path_provided);
         //config.update(&cli_args);
 
         println!("Writing the configuration to {}\n", &output_file);
