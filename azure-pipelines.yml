@@ -1,5 +1,4 @@
 trigger:
-  batch: "true"
   branches:
     include:
     - master
@@ -20,22 +19,26 @@ stages:
               invoke-restmethod -usebasicparsing 'https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe' -outfile 'rustup-init.exe'
               ./rustup-init.exe -y --default-toolchain stable-x86_64-pc-windows-msvc --no-modify-path
               remove-item rustup-init.exe
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" update stable
             displayName: Install Rust
 
           - powershell: |
-              $m = convertfrom-json(cargo metadata --format-version 1)
+              $c = & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo" metadata --format-version 1
+              $m = convertfrom-json $c
               $version = ($m.packages | where-object {$_.name -like 'demo'}).version
               Write-Host "##vso[build.updatebuildnumber]v$version.$env:BUILD_BUILDID"
             displayName: Label Build
 
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" component add rustfmt
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" fmt -- --version
               & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" fmt -- --check
             displayName: Validate Formatting
 
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" component add clippy
-              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" clippy
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" clippy -- --version
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" clippy -- --deny warnings
             displayName: Lint
 
           - powershell: |
@@ -74,18 +77,22 @@ stages:
               else
                   curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable-x86_64-unknown-linux-gnu -y
               fi
+              export PATH="~/.cargo/bin:$PATH"
+              rustup update stable
             displayName: Install Rust
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
               rustup component add rustfmt
+              cargo fmt -- --version
               cargo fmt -- --check
             displayName: Validate Formatting
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
               rustup component add clippy
-              cargo clippy
+              cargo clippy -- --version
+              cargo clippy -- --deny warnings
             displayName: Lint
 
           - script: |
@@ -132,18 +139,22 @@ stages:
               else
                   curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable-x86_64-apple-darwin -y
               fi
+              export PATH="~/.cargo/bin:$PATH"
+              rustup update stable
             displayName: Install Rust
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
               rustup component add rustfmt
+              cargo fmt -- --version
               cargo fmt -- --check
             displayName: Validate Formatting
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
               rustup component add clippy
-              cargo clippy
+              cargo clippy -- --version
+              cargo clippy -- --deny warnings
             displayName: Lint
 
           - script: |
