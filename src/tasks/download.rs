@@ -2,6 +2,7 @@ use reqwest::{Client, Url};
 use std::fs::File;
 use std::path::Path;
 
+#[allow(clippy::match_wild_err_arm)]
 pub fn download_file(uri: &str, filename: &str) {
     if Path::new(filename).exists() {
         println!("\t\tFile {} already exists.  Skipping.", filename);
@@ -29,5 +30,5 @@ pub fn get_filename(uri: &str, filename: &str) -> String {
             }
         };
     };
-    return target_filename.to_string();
+    target_filename.to_string()
 }

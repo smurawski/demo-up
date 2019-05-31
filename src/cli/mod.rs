@@ -3,13 +3,48 @@ use clap::{App, Arg};
 arg_enum! {
     #[derive(Debug)]
     enum TalkTrack {
-        ALL,
         DAT,
         DEV,
         FUN,
         HYB,
         MIG,
-        SRE
+        SRE,
+    }
+}
+
+arg_enum! {
+    #[derive(Debug)]
+    enum SessionNames {
+        DAT10,
+        DAT20,
+        DAT30,
+        DAT40,
+        DAT50,
+        DEV10,
+        DEV20,
+        DEV30,
+        DEV40,
+        DEV50,
+        FUN10,
+        FUN20,
+        FUN30,
+        FUN40,
+        FUN50,
+        HYB10,
+        HYB20,
+        HYB30,
+        HYB40,
+        HYB50,
+        MIG10,
+        MIG20,
+        MIG30,
+        MIG40,
+        MIG50,
+        SRE10,
+        SRE20,
+        SRE30,
+        SRE40,
+        SRE50,
     }
 }
 
@@ -37,7 +72,7 @@ impl Default for CliArgs {
 }
 
 pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
-    return App::new("demo")
+    App::new("demo")
         .version(&*version)
         .author("Steven Murawski <steven.murawski@microsoft.com>")
         .about("Sets up or tears down demo environments for Microsoft Ignite | The Tour")
@@ -57,26 +92,26 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("subscription")
                 .short("S")
                 .takes_value(true),
-        );
+        )
 }
 
 fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
-    return App::new("up")
+    App::new("up")
         .about("Sets up the demo environment for one or more learning paths or sessions.")
         .arg(get_event_arg())
         .arg(get_learning_path_arg())
-        .arg(get_session_name_arg());
+        .arg(get_session_name_arg())
 }
 
 fn get_fetch_subcommand<'a, 'b>() -> App<'a, 'b> {
-    return App::new("fetch")
+    App::new("fetch")
         .about("Retrieves a local copy of a configuration file for the demo environment for one or more learning paths or sessions.")
         .arg(
             Arg::with_name("OUTPUT")
                 .help("Path to write the local configuration file to use.")
                 .index(1)
                 .default_value("./demo.yml"),
-        );
+        )
 }
 
 // fn get_down_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -96,31 +131,32 @@ fn get_user_environment_variable() -> &'static str {
 }
 
 fn get_event_arg<'a, 'b>() -> Arg<'a, 'b> {
-    return Arg::with_name("event")
+    Arg::with_name("event")
         .long("event")
         .short("e")
         .help("Event name (to keep environments unique).  Defaults to your local user name.")
-        .env(get_user_environment_variable());
+        .env(get_user_environment_variable())
 }
 
 fn get_learning_path_arg<'a, 'b>() -> Arg<'a, 'b> {
-    return Arg::with_name("learning_path")
+    Arg::with_name("learning_path")
         .multiple(true)
         .long("learning-path")
         .short("l")
         .help("Learning path.")
         .possible_values(&TalkTrack::variants())
-        .takes_value(true);
+        .takes_value(true)
 }
 
 fn get_session_name_arg<'a, 'b>() -> Arg<'a, 'b> {
-    return Arg::with_name("session_name")
+    Arg::with_name("session_name")
         .multiple(true)
         .long("session-name")
         .short("s")
         .help("Session name.")
+        .possible_values(&SessionNames::variants())
         .conflicts_with("learning_path")
-        .takes_value(true);
+        .takes_value(true)
 }
 
 #[cfg(test)]
