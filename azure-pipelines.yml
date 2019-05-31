@@ -37,12 +37,18 @@ stages:
 
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" component add rustfmt
-              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc fmt -- --check
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" fmt -- --check
             displayName: Validate Formatting
+
+          - powershell: |
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/rustup.exe" component add clippy
+              & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" clippy
+            displayName: Lint
 
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc check
             displayName: Cargo Check
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
           - powershell: |
               & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc test
@@ -52,7 +58,7 @@ stages:
               & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo.exe" +stable-x86_64-pc-windows-msvc build --release
             displayName: Build Release
             condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
-            
+
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: Release Build"
             condition: and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))
@@ -85,8 +91,15 @@ stages:
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
+              rustup component add clippy
+              cargo clippy
+            displayName: Lint
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
               cargo check
             displayName: Cargo Check
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
@@ -136,8 +149,15 @@ stages:
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
+              rustup component add clippy
+              cargo clippy
+            displayName: Lint
+
+          - script: |
+              export PATH="~/.cargo/bin:$PATH"
               cargo check
             displayName: Cargo Check
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
           - script: |
               export PATH="~/.cargo/bin:$PATH"
