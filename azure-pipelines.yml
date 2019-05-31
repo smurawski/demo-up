@@ -3,18 +3,11 @@ trigger:
   branches:
     include:
     - master
-  paths:
-    exclude:
-    - README.md
-    - ci/*
+
 pr:
   branches:
     include:
       - master
-  paths:
-    exclude:
-      - README.md
-      - ci/*
 
 stages:
   - stage: build
