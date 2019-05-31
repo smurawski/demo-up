@@ -1,5 +1,5 @@
 trigger:
-  batch: true
+  batch: "true"
   branches:
     include:
     - master
@@ -59,8 +59,8 @@ stages:
               ArtifactName: drop
               ArtifactType: Container
               TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
-              Parallel: "false"
-              ParallelCount: "8"
+              Parallel: false
+              ParallelCount: 8
 
       - job: linux
         pool:
@@ -107,8 +107,8 @@ stages:
               ArtifactName: drop
               ArtifactType: Container
               TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
-              Parallel: "false"
-              ParallelCount: "8"
+              Parallel: false
+              ParallelCount: 8
 
       - job: mac
         pool:
@@ -155,8 +155,8 @@ stages:
               ArtifactName: drop
               ArtifactType: Container
               TargetPath: "\\\\my\\share\\$(Build.DefinitionName)\\$(Build.BuildNumber)"
-              Parallel: "false"
-              ParallelCount: "8"
+              Parallel: false
+              ParallelCount: 8
 
 
   - stage: deploy
