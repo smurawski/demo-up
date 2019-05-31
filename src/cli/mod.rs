@@ -35,7 +35,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("config-file")
                 .short("c")
                 .takes_value(true)
-                .default_value("https://gist.githubusercontent.com/smurawski/414b5cc1f72edbe26c82907d23e36eb5/raw/8b23668c2ad2614740f154ec250a3d99309be567/demo.yml")
+                .default_value("https://aka.ms/demo-up")
         )
         .arg(
             Arg::with_name("subscription")
