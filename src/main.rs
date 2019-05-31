@@ -32,6 +32,7 @@ fn main() {
 
     let matches = get_app_cli(&version).get_matches();
     let mut cli_args = CliArgs {
+        config_path_provided: matches.is_present("config_file"),
         config_path: matches.value_of("config_file").unwrap().to_string(),
         subscription: "".to_string(),
         event: "".to_string(),
@@ -68,7 +69,7 @@ fn main() {
         }
 
         println!("Loading the configuration from {}\n", &cli_args.config_path);
-        let mut config = get_config(&cli_args.config_path);
+        let mut config = get_config(&cli_args.config_path, &cli_args.config_path_provided);
         config.update(&cli_args);
 
         set_azure_environment(&config.subscription()).unwrap();

@@ -288,22 +288,24 @@ fn read_from_url(url: Url) -> Result<String, io::Error> {
     Ok(contents)
 }
 
-pub fn get_config(path: &str) -> Config {
-    let content = match Url::parse(path) {
-        Ok(url) => read_from_url(url).unwrap(),
-        Err(_) => {
-            if Path::new(path).exists() {
-                read(path).unwrap()
-            } else {
-                let default_path = "./demo.yml";
-                if Path::new(default_path).exists() {
-                    read(default_path).unwrap()
+pub fn get_config(path: &str, config_path_provided: &bool) -> Config {
+    let default_path = "./demo.yml";
+
+    let content = if !config_path_provided && Path::new(default_path).exists() {
+        read(default_path).unwrap()
+    } else {
+        match Url::parse(path) {
+            Ok(url) => read_from_url(url).unwrap(),
+            Err(_) => {
+                if Path::new(path).exists() {
+                    read(path).unwrap()
                 } else {
                     panic!("Failed to locate any valid configuration file.")
                 }
             }
         }
     };
+
     load(&content)
 }
 
@@ -312,11 +314,11 @@ mod tests {
     use super::*;
 
     fn load_empty_config() -> Config {
-        get_config(&"./test/artifacts/empty_config.yml")
+        get_config(&"./test/artifacts/empty_config.yml", &true)
     }
 
     fn load_single_session_config() -> Config {
-        get_config(&"./test/artifacts/single_session_config.yml")
+        get_config(&"./test/artifacts/single_session_config.yml", &true)
     }
 
     fn get_single_session() -> Session {
@@ -328,6 +330,18 @@ mod tests {
             session_result = session;
         }
         session_result
+    }
+
+    #[test]
+    #[should_panic]
+    fn no_valid_config_provided_located_panics() {
+        get_config(&"./missing.yml", &true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn default_configs_missing_and_no_valid_config_provided_panics() {
+        get_config(&"./missing.yml", &false);
     }
 
     #[test]
