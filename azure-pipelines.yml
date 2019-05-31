@@ -23,7 +23,8 @@ stages:
             displayName: Install Rust
 
           - powershell: |
-              $m = convertfrom-json($env:PROGRAMFILES/Rust/.cargo/bin/cargo metadata --format-version 1)
+              $c = & "$env:PROGRAMFILES/Rust/.cargo/bin/cargo" metadata --format-version 1
+              $m = convertfrom-json $c
               $version = ($m.packages | where-object {$_.name -like 'demo'}).version
               Write-Host "##vso[build.updatebuildnumber]v$version.$env:BUILD_BUILDID"
             displayName: Label Build
