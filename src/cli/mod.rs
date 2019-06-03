@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use std::path::Path;
 
 arg_enum! {
     #[derive(Debug)]
@@ -48,6 +49,16 @@ arg_enum! {
     }
 }
 
+arg_enum! {
+    #[derive(Debug)]
+    enum SessionSections {
+        Slides,
+        Videos,
+        GitRepos,
+        Commands,
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct CliArgs {
     pub config_path_provided: bool,
@@ -85,7 +96,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("config-file")
                 .short("c")
                 .takes_value(true)
-                .default_value("https://aka.ms/demo-up"),
+                .default_value(default_config_path()),
         )
         .arg(
             Arg::with_name("subscription")
@@ -95,12 +106,22 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
         )
 }
 
+fn default_config_path() -> &'static str {
+    if Path::new("demo.yml").exists() {
+        "demo.yml"
+    } else {
+        "https://aka.ms/demo-up"
+    }
+}
+
 fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
     App::new("up")
         .about("Sets up the demo environment for one or more learning paths or sessions.")
         .arg(get_event_arg())
         .arg(get_learning_path_arg())
         .arg(get_session_name_arg())
+        .arg(get_include_arg())
+        .arg(get_exclude_arg())
 }
 
 fn get_fetch_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -156,6 +177,22 @@ fn get_session_name_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Session name.")
         .possible_values(&SessionNames::variants())
         .conflicts_with("learning_path")
+        .takes_value(true)
+}
+
+fn get_include_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("include")
+        .long("include")
+        .help("Sections of the session to retrieve or exectute.")
+        .possible_values(&SessionSections::variants())
+        .takes_value(true)
+}
+
+fn get_exclude_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("exclude")
+        .long("exclude")
+        .help("Sections of the session to skip retrieval or exectution.")
+        .possible_values(&SessionSections::variants())
         .takes_value(true)
 }
 
