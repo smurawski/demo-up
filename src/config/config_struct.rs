@@ -31,10 +31,8 @@ impl Config {
             let mut updated_commands: Vec<Command> = Vec::new();
             for command in session.commands() {
                 let mut updated_command = command.clone();
-                if updated_command.resource_group.is_none() {
-                    let resource_group_name = format!("{}-{}", session.name(), cli_args.event);
-                    updated_command.resource_group = Some(resource_group_name);
-                }
+                updated_command.resource_group =
+                    updated_command.resource_group(&session.name(), &cli_args);
                 if updated_command.location.is_none() {
                     updated_command.location = Some(cli_args.location.clone());
                 }

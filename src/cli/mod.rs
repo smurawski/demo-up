@@ -7,11 +7,11 @@ use self::args::{
 };
 use self::fetch::get_fetch_subcommand;
 use self::up::get_up_subcommand;
-
 use clap::{App, Arg};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CliArgs {
     pub config_path: String,
     pub subscription: String,

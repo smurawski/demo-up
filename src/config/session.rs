@@ -1,6 +1,7 @@
 use super::Command;
 use super::FileDownload;
 use serde::{Deserialize, Serialize};
+use cli::CliArgs;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Session {
@@ -28,6 +29,12 @@ impl Session {
         } else {
             panic!("Sessions must have a name.")
         }
+    }
+
+    pub fn update<'a>(&'a mut self, cli_args: &CliArgs) -> &'a mut Session {
+        let commands = self.commands().iter().map(|c| c.update(&self.name(), cli_args); c).collect();
+        self.commands = Some(commands);
+        self
     }
 }
 

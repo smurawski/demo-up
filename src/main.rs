@@ -3,6 +3,7 @@ extern crate clap;
 extern crate custom_error;
 extern crate duct;
 extern crate git2;
+extern crate handlebars;
 extern crate regex;
 extern crate reqwest;
 extern crate serde;

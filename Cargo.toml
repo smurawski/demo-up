@@ -15,3 +15,4 @@ duct = "0.12"
 regex = "1"
 custom_error = "1.6"
 uuid = { version = "0.7", features = ["serde", "v4"] }
+handlebars = "1.1" 
