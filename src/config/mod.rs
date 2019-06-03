@@ -1,274 +1,22 @@
-use cli::CliArgs;
+pub mod arm_template;
+pub mod cli_command;
+pub mod command;
+pub mod config_struct;
+pub mod file_download;
+pub mod session;
+
+pub use self::arm_template::ArmTemplate;
+pub use self::cli_command::CliCommand;
+pub use self::command::Command;
+pub use self::config_struct::Config;
+pub use self::file_download::FileDownload;
+pub use self::session::Session;
+
 use reqwest::{Client, Url};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::path::Path;
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct ArmTemplate {
-    pub path: Option<String>,
-    pub url: Option<String>,
-    pub parameters: Option<HashMap<String, String>>,
-}
-
-impl ArmTemplate {
-    pub fn path(&self) -> String {
-        let template = self.clone();
-        if let Some(p) = template.path {
-            p
-        } else {
-            panic!("Failed to retrieve a local path.")
-        }
-    }
-
-    pub fn url(&self) -> String {
-        let template = self.clone();
-        if let Some(u) = template.url {
-            u
-        } else {
-            panic!("Failed to retrieve a template url.")
-        }
-    }
-
-    pub fn parameters(&self) -> Vec<String> {
-        let local_template = self.clone();
-        let mut parameters = Vec::new();
-        if let Some(p) = local_template.parameters {
-            for (k, v) in &p {
-                let parameter_string = format!("{}={}", k, v);
-                parameters.push(parameter_string);
-            }
-        }
-        parameters
-    }
-}
-
-impl Default for ArmTemplate {
-    fn default() -> Self {
-        ArmTemplate {
-            path: None,
-            url: None,
-            parameters: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct CliCommand {
-    pub subcommand: Option<String>,
-    pub parameters: Option<HashMap<String, String>>,
-}
-
-impl CliCommand {
-    pub fn subcommand(&self) -> String {
-        let cli_command = self.clone();
-        if let Some(s) = cli_command.subcommand {
-            s
-        } else {
-            panic!("Azure CLI commands must contain a subcommand.")
-        }
-    }
-    pub fn parameters(&self) -> Vec<String> {
-        let cli_command = self.clone();
-        let mut parameters = Vec::new();
-        if let Some(p) = cli_command.parameters {
-            for (k, v) in &p {
-                let parameter = format!("--{}", k);
-                let argument = v.to_string();
-                parameters.push(parameter);
-                parameters.push(argument);
-            }
-        }
-        parameters
-    }
-}
-
-impl Default for CliCommand {
-    fn default() -> Self {
-        CliCommand {
-            subcommand: None,
-            parameters: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Command {
-    pub order: Option<u32>,
-    pub resource_group: Option<String>,
-    pub location: Option<String>,
-    pub cli: Option<CliCommand>,
-    pub template: Option<ArmTemplate>,
-}
-
-impl Command {
-    pub fn cli(&self) -> CliCommand {
-        let command = self.clone();
-        if let Some(c) = command.cli {
-            c
-        } else {
-            CliCommand::default()
-        }
-    }
-
-    pub fn template(&self) -> ArmTemplate {
-        let command = self.clone();
-        if let Some(t) = command.template {
-            t
-        } else {
-            ArmTemplate::default()
-        }
-    }
-
-    pub fn order(&self) -> u32 {
-        if let Some(o) = self.order {
-            o
-        } else {
-            u32::max_value()
-        }
-    }
-}
-
-impl Default for Command {
-    fn default() -> Self {
-        Command {
-            order: None,
-            resource_group: None,
-            location: None,
-            cli: None,
-            template: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct FileDownload {
-    pub file_name: Option<String>,
-    pub url: Option<String>,
-}
-
-impl Default for FileDownload {
-    fn default() -> Self {
-        FileDownload {
-            file_name: None,
-            url: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Session {
-    pub name: Option<String>,
-    pub slides: Option<FileDownload>,
-    pub videos: Option<Vec<FileDownload>>,
-    pub git_repos: Option<Vec<String>>,
-    pub commands: Option<Vec<Command>>,
-}
-
-impl Session {
-    pub fn commands(&self) -> Vec<Command> {
-        let s = self.clone();
-        if let Some(c) = s.commands {
-            c
-        } else {
-            Vec::new()
-        }
-    }
-
-    pub fn name(&self) -> String {
-        let s = self.clone();
-        if let Some(n) = s.name {
-            n
-        } else {
-            panic!("Sessions must have a name.")
-        }
-    }
-}
-
-impl Default for Session {
-    fn default() -> Self {
-        Session {
-            name: None,
-            slides: None,
-            git_repos: None,
-            videos: None,
-            commands: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct Config {
-    pub subscription: Option<String>,
-    pub sessions: Option<Vec<Session>>,
-}
-
-impl Config {
-    pub fn write(&self, file_path: &str) {
-        if let Ok(content) = serde_yaml::to_string(self) {
-            let mut file = File::create(file_path).expect("Failed to create the output file.");
-            file.write_all(content.into_bytes().as_ref()).unwrap();
-        } else {
-            panic!("Failed to serialize the configuration.");
-        };
-    }
-
-    pub fn update<'a>(&'a mut self, cli_args: &CliArgs) -> &'a mut Config {
-        if !cli_args.subscription.is_empty() {
-            self.subscription = Some(cli_args.subscription.clone());
-        }
-        let mut updated_sessions: Vec<Session> = Vec::new();
-        for session in self.sessions() {
-            let mut updated_session = session.clone();
-            let mut updated_commands: Vec<Command> = Vec::new();
-            for command in session.commands() {
-                let mut updated_command = command.clone();
-                if updated_command.resource_group.is_none() {
-                    let resource_group_name = format!("{}-{}", session.name(), cli_args.event);
-                    updated_command.resource_group = Some(resource_group_name);
-                }
-                if updated_command.location.is_none() {
-                    updated_command.location = Some(cli_args.location.clone());
-                }
-                updated_commands.push(updated_command);
-            }
-            updated_session.commands = Some(updated_commands);
-            updated_sessions.push(updated_session);
-        }
-        self.sessions = Some(updated_sessions);
-        self
-    }
-
-    pub fn subscription(&self) -> String {
-        let config = self.clone();
-        if let Some(s) = config.subscription {
-            s
-        } else {
-            panic!("A subscription needs to be defined, either in the configuration file or on the command line.")
-        }
-    }
-
-    pub fn sessions(&self) -> Vec<Session> {
-        let config = self.clone();
-        if let Some(s) = config.sessions {
-            s
-        } else {
-            Vec::new()
-        }
-    }
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            subscription: None,
-            sessions: None,
-        }
-    }
-}
 
 fn read(path: &str) -> Result<String, io::Error> {
     let mut file = File::open(path)?;
@@ -297,24 +45,14 @@ fn read_from_url(url: Url) -> Result<String, io::Error> {
     Ok(contents)
 }
 
-pub fn get_config(path: &str, config_path_provided: bool) -> Config {
-    let default_path = "./demo.yml";
-
-    let content = if !config_path_provided && Path::new(default_path).exists() {
-        println!("Loading the configuration from {}\n", &default_path);
-
-        read(default_path).unwrap()
-    } else {
-        println!("Loading the configuration from {}\n", &path);
-
-        match Url::parse(path) {
-            Ok(url) => read_from_url(url).unwrap(),
-            Err(_) => {
-                if Path::new(path).exists() {
-                    read(path).unwrap()
-                } else {
-                    panic!("Failed to locate any valid configuration file.")
-                }
+pub fn get_config(path: &str) -> Config {
+    let content = match Url::parse(path) {
+        Ok(url) => read_from_url(url).unwrap(),
+        Err(_) => {
+            if Path::new(path).exists() {
+                read(path).unwrap()
+            } else {
+                panic!("Failed to locate any valid configuration file.")
             }
         }
     };
@@ -327,11 +65,11 @@ mod tests {
     use super::*;
 
     fn load_empty_config() -> Config {
-        get_config(&"./test/artifacts/empty_config.yml", true)
+        get_config(&"./test/artifacts/empty_config.yml")
     }
 
     fn load_single_session_config() -> Config {
-        get_config(&"./test/artifacts/single_session_config.yml", true)
+        get_config(&"./test/artifacts/single_session_config.yml")
     }
 
     fn get_single_session() -> Session {
@@ -348,13 +86,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn no_valid_config_provided_located_panics() {
-        get_config(&"./missing.yml", true);
-    }
-
-    #[test]
-    #[should_panic]
-    fn default_configs_missing_and_no_valid_config_provided_panics() {
-        get_config(&"./missing.yml", false);
+        get_config(&"./missing.yml");
     }
 
     #[test]

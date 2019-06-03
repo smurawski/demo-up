@@ -33,13 +33,14 @@ fn main() {
 
     let matches = get_app_cli(&version).get_matches();
     let mut cli_args = CliArgs {
-        config_path_provided: matches.is_present("config_file"),
         config_path: matches.value_of("config_file").unwrap().to_string(),
         subscription: "".to_string(),
         event: "".to_string(),
         session_names: Vec::new(),
         location: "westus2".to_string(),
+        exclude: Vec::new(),
     };
+
     cli_args.subscription = match matches.value_of("subscription") {
         Some(s) => s.to_string(),
         _ => "".to_string(),
@@ -61,24 +62,34 @@ fn main() {
                 }
             }
         };
+
         if sub_matches.is_present("session_name") {
             cli_args.session_names = sub_matches
                 .values_of("session_name")
                 .unwrap()
                 .map(|x| x.to_string())
                 .collect();
-        }
+        };
 
-        let mut config = get_config(&cli_args.config_path, cli_args.config_path_provided);
+        if sub_matches.is_present("exclude") {
+            cli_args.exclude = sub_matches
+                .values_of("exclude")
+                .unwrap()
+                .map(|x| x.to_string())
+                .collect();
+        };
+
+        println!("Loading the configuration from {}\n", &cli_args.config_path);
+        let mut config = get_config(&cli_args.config_path);
         config.update(&cli_args);
 
         set_azure_environment(&config.subscription()).unwrap();
 
         let starting_directory = env::current_dir().unwrap();
-        for session_name in cli_args.session_names {
+        for session_name in &cli_args.session_names {
             let mut current_sessions = config.sessions();
             println!("Setting up environment for {}\n", &session_name);
-            current_sessions.retain(|s| s.name() == session_name);
+            current_sessions.retain(|s| s.name() == *session_name);
             for s in current_sessions {
                 println!("\t{}: Starting setup", &session_name);
                 let session_directory = starting_directory.to_path_buf().join(s.name.unwrap());
@@ -89,7 +100,7 @@ fn main() {
                 println!("\t{}: Creating session directory", &session_name);
                 create_directory(&session_directory);
 
-                if s.slides.is_some() {
+                if (!skip_section(&cli_args, "Slides".to_string())) && s.slides.is_some() {
                     println!("\t{}: Creating slides directory.", &session_name);
                     create_directory(&slides_directory);
 
@@ -104,7 +115,7 @@ fn main() {
                     download_file(&slides_url, &slides_filename);
                 }
 
-                if s.videos.is_some() {
+                if !skip_section(&cli_args, "Videos".to_string()) && s.videos.is_some() {
                     println!("\t{}: Creating video directory.", &session_name);
                     create_directory(&video_directory);
 
@@ -121,7 +132,7 @@ fn main() {
                     }
                 }
 
-                if s.git_repos.is_some() {
+                if !skip_section(&cli_args, "GitRepos".to_string()) && s.git_repos.is_some() {
                     println!("\t{}: Creating source directory.", &session_name);
                     create_directory(&source_directory);
                     for repo_url in s.git_repos.unwrap() {
@@ -139,23 +150,25 @@ fn main() {
 
                 env::set_current_dir(&starting_directory).unwrap();
 
-                if let Some(mut commands) = s.commands {
-                    println!("\t{}: Creating the Azure environment.", &session_name);
+                if !skip_section(&cli_args, "Commands".to_string()) {
+                    if let Some(mut commands) = s.commands {
+                        println!("\t{}: Creating the Azure environment.", &session_name);
 
-                    commands.sort_by_key(|c| c.order());
-                    for command in commands {
-                        if command.template.is_some() {
-                            println!("\t\t{}: Deploying an ARM template", &session_name);
+                        commands.sort_by_key(|c| c.order());
+                        for command in commands {
+                            if command.template.is_some() {
+                                println!("\t\t{}: Deploying an ARM template", &session_name);
 
-                            deploy_template(&command).unwrap();
+                                deploy_template(&command).unwrap();
+                            };
+                            if command.cli.is_some() {
+                                println!("\t\t{}: Running a CLI command", &session_name);
+
+                                run_cli_command(&command).unwrap();
+                            };
                         }
-                        if command.cli.is_some() {
-                            println!("\t\t{}: Running a CLI command", &session_name);
-
-                            run_cli_command(&command).unwrap();
-                        }
-                    }
-                }
+                    };
+                };
             }
         }
     }
@@ -166,18 +179,23 @@ fn main() {
             _ => panic!("No output path provided."),
         };
 
-        let mut config = get_config(&cli_args.config_path, cli_args.config_path_provided);
+        println!("Loading the configuration from {}\n", &cli_args.config_path);
+        let mut config = get_config(&cli_args.config_path);
         //config.update(&cli_args);
 
         println!("Writing the configuration to {}\n", &output_file);
         config.write(&output_file);
-    }
+    };
 
     // if let Some(sub_matches) = matches.subcommand_matches("down") {
     // }
 
     // if let Some(sub_matches) = matches.subcommand_matches("pkg") {
     // }
+}
+
+fn skip_section(args: &CliArgs, section: String) -> bool {
+    args.exclude.contains(&section)
 }
 
 fn create_directory(path: &PathBuf) {
