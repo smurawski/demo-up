@@ -1,72 +1,35 @@
+mod args;
+mod fetch;
+mod up;
+
+use self::args::{
+    get_event_arg, get_exclude_arg, get_learning_path_arg, get_output_arg, get_session_name_arg,
+};
+use self::fetch::get_fetch_subcommand;
+use self::up::get_up_subcommand;
+
 use clap::{App, Arg};
-
-arg_enum! {
-    #[derive(Debug)]
-    enum TalkTrack {
-        DAT,
-        DEV,
-        FUN,
-        HYB,
-        MIG,
-        SRE,
-    }
-}
-
-arg_enum! {
-    #[derive(Debug)]
-    enum SessionNames {
-        DAT10,
-        DAT20,
-        DAT30,
-        DAT40,
-        DAT50,
-        DEV10,
-        DEV20,
-        DEV30,
-        DEV40,
-        DEV50,
-        FUN10,
-        FUN20,
-        FUN30,
-        FUN40,
-        FUN50,
-        HYB10,
-        HYB20,
-        HYB30,
-        HYB40,
-        HYB50,
-        MIG10,
-        MIG20,
-        MIG30,
-        MIG40,
-        MIG50,
-        SRE10,
-        SRE20,
-        SRE30,
-        SRE40,
-        SRE50,
-    }
-}
+use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct CliArgs {
-    pub config_path_provided: bool,
     pub config_path: String,
     pub subscription: String,
     pub event: String,
     pub session_names: Vec<String>,
     pub location: String,
+    pub exclude: Vec<String>,
 }
 
 impl Default for CliArgs {
     fn default() -> CliArgs {
         CliArgs {
-            config_path_provided: false,
             config_path: "".to_string(),
             subscription: "".to_string(),
             event: "".to_string(),
             session_names: Vec::new(),
             location: "".to_string(),
+            exclude: Vec::new(),
         }
     }
 }
@@ -85,7 +48,7 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
                 .long("config-file")
                 .short("c")
                 .takes_value(true)
-                .default_value("https://aka.ms/demo-up"),
+                .default_value(default_config_path()),
         )
         .arg(
             Arg::with_name("subscription")
@@ -95,23 +58,12 @@ pub fn get_app_cli<'a, 'b>(version: &'b str) -> App<'a, 'b> {
         )
 }
 
-fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
-    App::new("up")
-        .about("Sets up the demo environment for one or more learning paths or sessions.")
-        .arg(get_event_arg())
-        .arg(get_learning_path_arg())
-        .arg(get_session_name_arg())
-}
-
-fn get_fetch_subcommand<'a, 'b>() -> App<'a, 'b> {
-    App::new("fetch")
-        .about("Retrieves a local copy of a configuration file for the demo environment for one or more learning paths or sessions.")
-        .arg(
-            Arg::with_name("OUTPUT")
-                .help("Path to write the local configuration file to use.")
-                .index(1)
-                .default_value("./demo.yml"),
-        )
+fn default_config_path() -> &'static str {
+    if Path::new("demo.yml").exists() {
+        "demo.yml"
+    } else {
+        "https://aka.ms/demo-up"
+    }
 }
 
 // fn get_down_subcommand<'a, 'b>() -> App<'a, 'b> {
@@ -122,131 +74,60 @@ fn get_fetch_subcommand<'a, 'b>() -> App<'a, 'b> {
 //     return App::new("pkg");
 // }
 
-fn get_user_environment_variable() -> &'static str {
-    if cfg!(windows) {
-        "USERNAME"
-    } else {
-        "USER"
-    }
-}
-
-fn get_event_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("event")
-        .long("event")
-        .short("e")
-        .help("Event name (to keep environments unique).  Defaults to your local user name.")
-        .env(get_user_environment_variable())
-}
-
-fn get_learning_path_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("learning_path")
-        .multiple(true)
-        .long("learning-path")
-        .short("l")
-        .help("Learning path.")
-        .possible_values(&TalkTrack::variants())
-        .takes_value(true)
-}
-
-fn get_session_name_arg<'a, 'b>() -> Arg<'a, 'b> {
-    Arg::with_name("session_name")
-        .multiple(true)
-        .long("session-name")
-        .short("s")
-        .help("Session name.")
-        .possible_values(&SessionNames::variants())
-        .conflicts_with("learning_path")
-        .takes_value(true)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn demo_up_no_parameters() {
-        let args = vec!["up"];
+    fn demo_no_parameters() {
+        let args = vec!["demo"];
 
-        let cli = get_up_subcommand();
+        let cli = get_app_cli("0.0.1");
         let matches = cli.get_matches_from(args);
 
-        let event = matches.value_of("event");
-        let learning_path = matches.values_of("learning_path");
-        let session_name = matches.values_of("session_name");
+        let config_file = matches.value_of("config_file");
+        let subscription = matches.values_of("subscription");
 
-        assert!(event.is_some());
-        assert!(learning_path.is_none());
-        assert!(session_name.is_none());
+        assert!(config_file.is_some());
+        assert!(subscription.is_none());
     }
 
     #[test]
-    fn demo_up_only_learning_path() {
-        let args = vec!["up", "--learning-path", "DAT"];
+    fn demo_no_parameters_no_local_config() {
+        let args = vec!["demo"];
 
-        let cli = get_up_subcommand();
+        let cli = get_app_cli("0.0.1");
         let matches = cli.get_matches_from(args);
 
-        let event = matches.value_of("event");
-        let learning_path = matches.values_of("learning_path");
-        let session_name = matches.values_of("session_name");
+        let config_file = matches.value_of("config_file");
 
-        assert!(event.is_some());
-        assert!(learning_path.is_some());
-        assert!(session_name.is_none());
+        assert!(config_file.is_some());
+        assert_eq!(config_file.unwrap(), "https://aka.ms/demo-up");
     }
 
     #[test]
-    fn demo_up_only_learning_path_wrong_value() {
-        let args = vec!["up", "--learning-path", "BOO"];
+    fn demo_with_config_path() {
+        let args = vec!["demo", "--config-file", "some_local_file"];
 
-        let cli = get_up_subcommand();
-        let matches = cli.get_matches_from_safe(args);
+        let cli = get_app_cli("0.0.1");
+        let matches = cli.get_matches_from(args);
 
-        assert!(matches.is_err());
+        let config_file = matches.value_of("config_file");
+
+        assert!(config_file.is_some());
+        assert_eq!(config_file.unwrap(), "some_local_file");
     }
 
     #[test]
-    fn demo_up_only_session_name() {
-        let args = vec!["up", "--session-name", "DAT10"];
+    fn demo_with_subscription() {
+        let args = vec!["demo", "--subscription", "your_azure_subscription"];
 
-        let cli = get_up_subcommand();
+        let cli = get_app_cli("0.0.1");
         let matches = cli.get_matches_from(args);
 
-        let event = matches.value_of("event");
-        let learning_path = matches.values_of("learning_path");
-        let session_name = matches.values_of("session_name");
+        let subscription = matches.value_of("subscription");
 
-        assert!(event.is_some());
-        assert!(learning_path.is_none());
-        assert!(session_name.is_some());
+        assert!(subscription.is_some());
+        assert_eq!(subscription.unwrap(), "your_azure_subscription");
     }
-
-    // #[test]
-    // fn demo_up_learning_path_and_session_error() {
-    //     let cli = get_up_subcommand();
-    //     let args = vec!["--learning-path SRE", "--session-name DAT10"];
-    //     let good_response = cli.get_matches_from(args);
-
-    //     assert!(good_response.is_err())
-    // }
-
-    // #[test]
-    // fn demo_down_no_parameters() {
-    //     let args = vec!["down"];
-
-    //     let cli = get_down_subcommand();
-    //     let matches = cli.get_matches_from_safe(args);
-
-    //     assert!(matches.is_ok());
-    // }
-
-    // #[test]
-    // fn demo_pkg_no_parameters() {
-    //     let args = vec!["pkg"];
-
-    //     let cli = get_pkg_subcommand();
-    //     let matches = cli.get_matches_from_safe(args);
-
-    //     assert!(matches.is_ok());
-    // }
 }
