@@ -108,8 +108,10 @@ FLAGS:
 
 OPTIONS:
 -e, --event <event> Event name (to keep environments unique). Defaults to your local user name.
+    --exclude <exclude>... Sections of the session to skip retrieval or exectution. [possible values: Slides,Videos, GitRepos, Commands]
 -l, --learning-path <learning_path>... Learning path. Allows multiple [possible values: ALL, DAT, DEV, FUN, HYB, MIG, SRE]
 -s, --session-name <session_name>... Session name. Allows multiple. [possible values: DAT10, DAT20, DAT30, DAT40, DAT50, DEV10, DEV20, DEV30, DEV40, DEV50, FUN10, FUN20, FUN30, FUN40, FUN50, HYB10, HYB20, HYB30, HYB40, HYB50, MIG10, MIG20, MIG30, MIG40, MIG50, SRE10, SRE20, SRE30, SRE40, SRE50]
+-- 
 ```
 
 ## Contributing
