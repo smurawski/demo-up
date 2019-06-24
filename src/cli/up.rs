@@ -1,9 +1,11 @@
-use super::{get_event_arg, get_exclude_arg, get_learning_path_arg, get_session_name_arg};
+use super::args::*;
 use clap::App;
 
 pub fn get_up_subcommand<'a, 'b>() -> App<'a, 'b> {
     App::new("up")
         .about("Sets up the demo environment for one or more learning paths or sessions.")
+        .arg(get_subscription_arg())
+        .arg(get_config_file_arg())
         .arg(get_event_arg())
         .arg(get_learning_path_arg())
         .arg(get_session_name_arg())
@@ -24,10 +26,53 @@ mod tests {
         let event = matches.value_of("event");
         let learning_path = matches.values_of("learning_path");
         let session_name = matches.values_of("session_name");
+        let config_file = matches.value_of("config_file");
+        let subscription = matches.values_of("subscription");
 
+        assert!(config_file.is_some());
+        assert!(subscription.is_none());
         assert!(event.is_some());
         assert!(learning_path.is_none());
         assert!(session_name.is_none());
+    }
+
+    #[test]
+    fn demo_no_parameters_no_local_config() {
+        let args = vec!["up"];
+
+        let cli = get_up_subcommand();
+        let matches = cli.get_matches_from(args);
+
+        let config_file = matches.value_of("config_file");
+
+        assert!(config_file.is_some());
+        assert_eq!(config_file.unwrap(), "https://aka.ms/demo-up");
+    }
+
+    #[test]
+    fn demo_with_config_path() {
+        let args = vec!["up", "--config-file", "some_local_file"];
+
+        let cli = get_up_subcommand();
+        let matches = cli.get_matches_from(args);
+
+        let config_file = matches.value_of("config_file");
+
+        assert!(config_file.is_some());
+        assert_eq!(config_file.unwrap(), "some_local_file");
+    }
+
+    #[test]
+    fn demo_with_subscription() {
+        let args = vec!["up", "--azure-subscription", "your_azure_subscription"];
+
+        let cli = get_up_subcommand();
+        let matches = cli.get_matches_from(args);
+
+        let subscription = matches.value_of("subscription");
+
+        assert!(subscription.is_some());
+        assert_eq!(subscription.unwrap(), "your_azure_subscription");
     }
 
     #[test]

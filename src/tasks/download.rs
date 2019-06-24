@@ -32,3 +32,24 @@ pub fn get_filename(uri: &str, filename: &str) -> String {
     };
     target_filename.to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_filename_with_no_default() {
+        let expected = "somefile.txt".to_string();
+        let actual = get_filename("https://somewhere.com/somefile.txt", "");
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn get_filename_with_default() {
+        let expected = "otherfile.txt".to_string();
+        let actual = get_filename("https://somewhere.com/somefile.txt", "otherfile.txt");
+
+        assert_eq!(expected, actual);
+    }
+}

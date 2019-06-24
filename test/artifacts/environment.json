@@ -1,0 +1,34 @@
+[
+    {
+        "name": "RESOURCE_GROUP_NAME",
+        "secureValue": "[variables('rgname')]"
+    },
+    {
+        "name": "BASE_NAME",
+        "secureValue": "[parameters('FQDNPrefix')]"
+    },
+    {
+        "name": "AZURE_STORAGE_ACCOUNT",
+        "secureValue": "[variables('storageAccountName')]"
+    },
+    {
+        "name": "AZURE_STORAGE_KEY",
+        "secureValue": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
+    },
+    {
+        "name": "MANAGED_IDENTITY",
+        "secureValue": "[concat(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName')))]"
+    },
+    {
+        "name": "SESSION_CODE",
+        "secureValue": "[variables('sessionCode')]"
+    },
+    {
+        "name": "SOURCE_REPOSITORY",
+        "secureValue": "[variables('sourceRepo')]"
+    },
+    {
+        "name": "ENTRYPOINT",
+        "secureValue": "[variables('entrypoint')]"
+    }
+]
