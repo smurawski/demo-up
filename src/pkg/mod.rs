@@ -75,5 +75,26 @@ mod tests {
         parameter_with_default_value.default_value = Some("hi".to_string());
         params.insert("three", parameter_with_default_value);
         default.base_template["parameters"] = serde_json::to_value(params).unwrap();
+        assert_eq!(
+            default.base_template["parameters"]["three"]["defaultValue"],
+            serde_json::to_value("hi").unwrap()
+        );
+    }
+
+    #[test]
+    fn add_environment_to_output() {
+        let mut default = PkgCommand::default();
+        let mut environment = Vec::new();
+        let mut first_environment = Environment::default();
+        first_environment.name = Some("first".to_string());
+        first_environment.secure_value = Some("value".to_string());
+        environment.push(first_environment);
+        default.base_template["resources"][3]["properties"]["containers"][0]["properties"]
+            ["environmentVariables"] = serde_json::to_value(environment).unwrap();
+        assert_eq!(
+            default.base_template["resources"][3]["properties"]["containers"][0]["properties"]
+                ["environmentVariables"][0]["secureValue"],
+            serde_json::to_value("value").unwrap()
+        );
     }
 }
