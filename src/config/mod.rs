@@ -1,16 +1,16 @@
 pub mod arm_template;
 pub mod cli_command;
 pub mod command;
-pub mod config_struct;
 pub mod file_download;
 pub mod session;
+pub mod tour_config;
 
 pub use self::arm_template::ArmTemplate;
 pub use self::cli_command::CliCommand;
 pub use self::command::Command;
-pub use self::config_struct::Config;
 pub use self::file_download::FileDownload;
 pub use self::session::Session;
+pub use self::tour_config::TourConfig;
 
 use reqwest::{Client, Url};
 use std::fs::File;
@@ -18,7 +18,7 @@ use std::io;
 use std::io::prelude::*;
 use std::path::Path;
 
-fn read(path: &str) -> Result<String, io::Error> {
+pub fn read(path: &Path) -> Result<String, io::Error> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
@@ -26,10 +26,10 @@ fn read(path: &str) -> Result<String, io::Error> {
     Ok(contents)
 }
 
-fn load(yaml_str: &str) -> Config {
+fn load(yaml_str: &str) -> TourConfig {
     match serde_yaml::from_str(&yaml_str) {
         Ok(s) => s,
-        Err(_e) => Config::default(),
+        Err(_e) => TourConfig::default(),
     }
 }
 
@@ -45,12 +45,13 @@ fn read_from_url(url: Url) -> Result<String, io::Error> {
     Ok(contents)
 }
 
-pub fn get_config(path: &str) -> Config {
+pub fn get_config(path: &str) -> TourConfig {
     let content = match Url::parse(path) {
         Ok(url) => read_from_url(url).unwrap(),
         Err(_) => {
-            if Path::new(path).exists() {
-                read(path).unwrap()
+            let p = Path::new(path);
+            if p.exists() {
+                read(&p).unwrap()
             } else {
                 panic!("Failed to locate any valid configuration file.")
             }
@@ -60,15 +61,17 @@ pub fn get_config(path: &str) -> Config {
     load(&content)
 }
 
+// trait for create directory and execute
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn load_empty_config() -> Config {
+    fn load_empty_config() -> TourConfig {
         get_config(&"./test/artifacts/empty_config.yml")
     }
 
-    fn load_single_session_config() -> Config {
+    fn load_single_session_config() -> TourConfig {
         get_config(&"./test/artifacts/single_session_config.yml")
     }
 

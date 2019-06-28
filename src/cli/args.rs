@@ -1,4 +1,5 @@
 use clap::Arg;
+use std::path::Path;
 
 arg_enum! {
     #[derive(Debug)]
@@ -58,12 +59,35 @@ arg_enum! {
     }
 }
 
-pub fn get_user_environment_variable() -> &'static str {
+fn get_user_environment_variable() -> &'static str {
     if cfg!(windows) {
         "USERNAME"
     } else {
         "USER"
     }
+}
+
+fn default_config_path() -> &'static str {
+    if Path::new("demo.yml").exists() {
+        "demo.yml"
+    } else {
+        "https://aka.ms/demo-up"
+    }
+}
+
+pub fn get_config_file_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("config_file")
+        .long("config-file")
+        .short("c")
+        .takes_value(true)
+        .default_value(default_config_path())
+}
+
+pub fn get_subscription_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("subscription")
+        .long("azure-subscription")
+        .short("a")
+        .takes_value(true)
 }
 
 pub fn get_event_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -109,4 +133,27 @@ pub fn get_output_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Path to write the local configuration file to use.")
         .index(1)
         .default_value("./demo.yml")
+}
+
+pub fn get_parameter_file_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("parameters_file_path")
+        .help("Path for JSON containing the parameters to use in the provisioning ARM template.")
+        .long("parameters-file-path")
+        .short("p")
+        .default_value("./parameters.json")
+}
+
+pub fn get_environment_file_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("environment_file_path")
+        .help("Path for JSON containing the environment variables to supply to the bootstrap container in the provisioning ARM template.")
+        .long("environment-file-path")
+        .short("e")
+        .default_value("./environment.json")
+}
+
+pub fn get_variable_file_arg<'a, 'b>() -> Arg<'a, 'b> {
+    Arg::with_name("variables_file_path")
+        .help("Path for JSON containing the variables to use in the provisioning ARM template.")
+        .long("variables-file-path")
+        .short("v")
 }

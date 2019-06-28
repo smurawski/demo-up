@@ -19,7 +19,7 @@ invoke-restmethod @params
 
 ### Linux
 
-**requires OpenSSL 1.1**
+Requires: **OpenSSL 1.1**
 
 ```bash
 curl -L 'https://github.com/smurawski/demo-up/releases/latest/download/demo-linux' -o demo
@@ -37,19 +37,15 @@ chmod +x demo
 
 Download and set up for one talk.
 
-`demo --subscription 'My Subscription up --session-name SRE10`
+`demo up --azure-subscription 'My Subscription --session-name SRE10`
 
 Download and setup multiple talks.
 
-`demo --subscription 'My Subscription up --session-name DEV10 SRE10`
+`demo up --azure-subscription 'My Subscription --session-name DEV10 SRE10`
 
 Download and setup a learning path.
 
-`demo --subscription 'My Subscription up --learning-path SRE`
-
-## Syntax and Usage
-
-[Video Walkthrough](https://demoup.blob.core.windows.net/assets/demo-up_walkthrough.mp4)
+`demo up --azure-subscription 'My Subscription --learning-path SRE`
 
 ### `demo`
 
@@ -63,10 +59,6 @@ demo [OPTIONS] [SUBCOMMAND]
 ```text
 FLAGS:                                                                                               -h, --help       Prints help information
 -V, --version    Prints version information
-
-OPTIONS:
--c, --config-file <config_file>       [default: https://aka.ms/demo-up]
--S, --subscription <subscription>
 
 SUBCOMMANDS:
 fetch    Retrieves a local copy of a configuration file for the demo environment for one or more learning paths or sessions.
@@ -88,6 +80,9 @@ FLAGS:
 -h, --help Prints help information
 -V, --version Prints version information
 
+OPTIONS:
+-c, --config-file <config_file>       [default: https://aka.ms/demo-up]
+
 ARGS:
 <OUTPUT> Path to write the local configuration file to use. [default: ./demo.yml]
 ```
@@ -107,6 +102,8 @@ FLAGS:
 -V, --version Prints version information
 
 OPTIONS:
+-c, --config-file <config_file>       [default: https://aka.ms/demo-up]
+-a, --azure-subscription <subscription>
 -e, --event <event> Event name (to keep environments unique). Defaults to your local user name.
     --exclude <exclude>... Sections of the session to skip retrieval or exectution. [possible values: Slides,Videos, GitRepos, Commands]
 -l, --learning-path <learning_path>... Learning path. Allows multiple [possible values: ALL, DAT, DEV, FUN, HYB, MIG, SRE]
@@ -144,3 +141,13 @@ OPTIONS:
 * [ ] Check your tests pass
 
     `cargo test`
+
+### Other tips
+
+To run the command you built, you can use `cargo run` to run the current state of the codebase.  You can pass commands to the command like
+
+```bash
+cargo run -- up
+```
+
+Anything after the first `--` will be passed to the `demo` command as an argument.

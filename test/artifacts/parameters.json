@@ -1,0 +1,5 @@
+{
+    "FQDNPrefix": {
+        "type": "string"
+    }
+}
