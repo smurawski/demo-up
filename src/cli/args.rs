@@ -140,6 +140,7 @@ pub fn get_parameter_file_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Path for JSON containing the parameters to use in the provisioning ARM template.")
         .long("parameters-file-path")
         .short("p")
+        .takes_value(true)
         .default_value("./parameters.json")
 }
 
@@ -148,6 +149,7 @@ pub fn get_environment_file_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Path for JSON containing the environment variables to supply to the bootstrap container in the provisioning ARM template.")
         .long("environment-file-path")
         .short("e")
+        .takes_value(true)
         .default_value("./environment.json")
 }
 
@@ -156,4 +158,5 @@ pub fn get_variable_file_arg<'a, 'b>() -> Arg<'a, 'b> {
         .help("Path for JSON containing the variables to use in the provisioning ARM template.")
         .long("variables-file-path")
         .short("v")
+        .takes_value(true)
 }
